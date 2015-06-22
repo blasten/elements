@@ -1,0 +1,13 @@
+{
+  "name": "pack",
+  "dependencies": {
+    "paper-elements": "PolymerElements/paper-elements#^1.0.0",
+    "iron-elements": "PolymerElements/iron-elements#^1.0.0",
+    "neon-elements": "PolymerElements/neon-elements#^1.0.0",
+    "app-layout": "polymerlabs/app-layout#~0.0.3"
+  },
+  "resolutions": {
+    "polymer": "^1.0.0",
+    "webcomponentsjs": "^0.7.2"
+  }
+}

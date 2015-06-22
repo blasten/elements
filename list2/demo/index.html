@@ -1,0 +1,334 @@
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!doctype html>
+<html>
+<head>
+
+  <title>collapsible content</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../../web-animations-js/web-animations-next-lite.min.js"></script>
+
+  <link rel="import" href="../../polymer/polymer.html">
+
+  <link rel="import" href="../../iron-flex-layout/iron-flex-layout.html">
+  <link rel="import" href="../../iron-ajax/iron-ajax.html">
+  <link rel="import" href="../../iron-icons/iron-icons.html">
+  <link rel="import" href="../../iron-media-query/iron-media-query.html">
+  <link rel="import" href="../iron-list.html">
+  <link rel="import" href="x-drawer.html">
+
+  <style is="custom-style">
+
+    paper-toolbar.tall .title {
+      font-size: 40px;
+      margin-left: 60px;
+      -webkit-transform-origin: left center;
+      transform-origin: left center;
+    }
+
+    iron-list {
+      padding-top: 1px;
+      padding-bottom: 16px;
+    }
+
+    iron-list.wide {
+      /* Customize the container for the item */
+      --iron-list-items-container: {
+        max-width: 800px;
+        width: calc(100% - 60px);
+        margin: auto;
+        margin-top: 60px;
+        margin-bottom: 60px;
+        border-bottom: 1px solid #ddd;
+      };
+    }
+
+    iron-list:not(.wide) {
+      /* Customize the container for the item */
+      --iron-list-items-container: {
+        margin-top: 0;
+      };
+    }
+
+    .item {
+      padding: 10px 20px;
+      background-color: white;
+      border: 1px solid #ddd;
+      line-height: 25px;
+      cursor: pointer;
+      margin-top: -1px;
+      position: relative;
+      overflow: hidden;
+
+      -webkit-tap-highlight-color: rgba(0,0,0,0);
+      tap-highlight-color: rgba(0,0,0,0);
+
+     /* -webkit-transition-property: -webkit-transform;
+      -webkit-transition-timing-function: ease-out;
+      -webkit-transition-duration: 0.2s;
+
+      transition-property: transform;
+      transition-timing-function: ease-out;
+      transition-duration: 0.2s;*/
+    }
+
+    iron-list:not(.wide) .item.expanded {
+      margin: 40px 0;
+      border: 1px solid #ddd;
+      box-shadow: 0 3px 3px #ddd;
+    }
+
+    iron-list.wide .item.expanded {
+      margin: 40px 0px;
+      border: 1px solid #ddd;
+      box-shadow: 0 3px 3px #ddd;
+      overflow: hidden;
+
+/*      -webkit-transform: translate3d(-20px, 0px, 0px);
+      transform: translate3d(-20px, 0px, 0px);*/
+    }
+
+    .item.expanded .primary {
+      font-weight: bold;
+    }
+
+    .item.expanded .avatar {
+      -webkit-transform: scale3d(1, 1, 1) translate(20px, 20px);
+      transform: scale3d(1, 1, 1) translate(20px, 20px);
+    }
+
+    .item.expanded .secondary {
+      display: block;
+      overflow: hidden;
+      margin-left: 0;
+      opacity: 0;
+      color: black;
+      -webkit-animation: fade-in 1s ease-out 0.1s forwards;
+      animation: fade-in 1s ease-out 0.1s forwards;
+    }
+
+    .item.expanded .pad {
+      white-space: normal;
+
+      -webkit-transform: translate3d(90px, 0px, 0px);
+      transform: translate3d(90px, 0px, 0px);
+
+      margin-right: 90px;
+    }
+
+    .item.expanded .expand {
+      display: block;
+      color: #4285f4;
+      -webkit-transform: rotateZ(180deg);
+      transform: rotateZ(180deg);
+    }
+
+    .item .avatar {
+      width: 48px;
+      height: 48px;
+      position: absolute;
+      top: 0;
+      left: 10px;
+      border-radius: 50%;
+      background-color: #DDD;
+      box-sizing: border-box;
+
+      -webkit-transform: scale3d(0.5, 0.5, 1);
+      transform: scale3d(0.5, 0.5, 1);
+
+      -webkit-transition: -webkit-transform ease-out 0.2s;
+      transition: transform ease-out 0.2s;
+    }
+
+    .item .expand {
+      position: absolute;
+      right: 20px;
+      color: #999;
+      display: none;
+      will-change: transform;
+
+      -webkit-transition: -webkit-transform 0.1s ease-in-out;
+      transition: transform 0.1s ease-in-out;
+    }
+
+    .item .collapse {
+      position: absolute;
+      right: 20px;
+      color: #999;
+      display: none;
+    }
+
+    .item:hover .expand {
+      display: block;
+    }
+
+    .item .pad {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+
+      margin-right: 60px;
+
+      -webkit-transition-property: transform;
+      -webkit-transition-timing-function: ease-out;
+      -webkit-transition-duration: 0.2s;
+
+      transition-property: transform;
+      transition-timing-function: ease-out;
+      transition-duration: 0.2s;
+
+
+      -webkit-transform: translate3d(70px, 0px, 0px);
+      transform: translate3d(70px, 0px, 0px);
+    }
+
+    .item .primary {
+      font-size: 16px;
+      display: inline;
+    }
+
+    .item .secondary {
+      font-size: 14px;
+      color: #999;
+      display: inline;
+      margin-left: 20px;
+    }
+
+    .item .dim {
+      display: none;
+    }
+
+    @keyframes fade-in {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+     @-webkit-keyframes fade-in {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+  </style>
+
+</head>
+<body unresolved>
+
+<template is="dom-bind">
+
+  <x-drawer fixed demo-title="Collapsible content">
+    <iron-ajax url="data/contacts.json" last-response="{{data}}" on-response="_dataReceived" auto></iron-ajax>
+    <iron-media-query query="(min-width: 600px)" on-query-matches-changed="_queryMatchedChanged"></iron-media-query>
+    <iron-list id="list" items="[[data]]" as="item">
+      <template>
+        <div on-tap="_tapItem">
+          <div class="item" class$="[[_getItemClass(item.index, item.expanded)]]">
+            <img class="avatar" src="[[item.image]]">
+            <div class="pad">
+              <iron-icon class="expand" icon="expand-more"></iron-icon>
+              <div class="primary">[[item.name]]</div>
+              <div class="secondary">[[item.shortText]]</div>
+              <div class="secondary dim">[[item.longText]]</div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </iron-list>
+  </x-drawer>
+</template>
+
+<script>
+
+  (function(scope) {
+
+    /*
+     * Event handler for the tap event.
+     */
+    scope._tapItem = function(event) {
+      var idx = this.$.list.indexForElement(event.currentTarget);
+      var shouldOpen = !list.get('items.' + idx + '.expanded');
+      var marginTopDelta = shouldOpen ? 40 : -40;
+
+
+      // launch the animation
+
+      list.animationWillChangeSizeForIndex(idx, {
+        computeNewHeight: function(itemContainer) {
+          this.set('items.' + idx + '.expanded', shouldOpen);
+          return itemContainer.offsetHeight;
+        },
+        fromDy: marginTopDelta,
+        toDy: marginTopDelta,
+        easing: 'ease-out',
+        duration: '0.2s'
+      });
+
+
+
+      
+
+
+      // var currentHeight = event.currentTarget.offsetHeight;
+      // list.set('items.' + idx + '.expanded', shouldOpen);
+      // var deltaHeight = event.currentTarget.offsetHeight - currentHeight;
+
+      // list.updateSizeForIndex2({
+      //   idx: idx,
+      //   margin: shouldOpen ? 40 : -40,
+      //   delta: deltaHeight,
+      //   easing: 'ease-out',
+      //   duration: '0.2s'
+      // });
+    };
+
+    /*
+     * Event handler for iron-media-query when the query matched.
+     */
+    scope._queryMatchedChanged = function(e) {
+      this._queryMatched = e.detail.value;
+      this.debounce('resize', function() {
+        if (!this.$.list.classList.contains('wide') || !this._queryMatched) {
+          this.toggleClass('wide', this._queryMatched, this.$.list);
+          this.$.list.updateStyles();
+          this.$.list.updateViewportBoundaries();
+        }
+      });
+    };
+
+    /*
+     * Event handler for iron-ajax when the data was received.
+     */
+    scope._dataReceived = function() {
+      this.data.forEach(function(item) {
+        item.expanded = false;
+      });
+    }
+
+    /*
+     * Gets the classes for a given item.
+     */
+    scope._getItemClass = function(vidx, expanded) {
+      var classes = 'item';
+      if (expanded) {
+        classes +=' expanded';
+      }
+      return classes;
+    };
+
+  })(document.querySelector('template[is=dom-bind]'));
+
+</script>
+</body>
+</html>
